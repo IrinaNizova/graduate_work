@@ -1,0 +1,16 @@
+setup.template.name: "alice-voicehelper-%{+yyyy.MM.dd}"
+setup.template.pattern: "alice-voicehelper-*"
+setup.ilm.enabled: false
+
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/etl/etl*
+    json:
+      keys_under_root: true
+      add_error_key: true
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  index: "alice-voicehelper-%{+yyyy.MM.dd}"

@@ -1,0 +1,16 @@
+setup.template.name: "alice-nginx-%{+yyyy.MM.dd}"
+setup.template.pattern: "alice-nginx-*"
+setup.ilm.enabled: false
+
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/nginx/access*
+    json:
+      keys_under_root: true
+      add_error_key: true
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  index: "alice-nginx-%{+yyyy.MM.dd}"

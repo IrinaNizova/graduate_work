@@ -1,0 +1,45 @@
+version: "3.3"
+
+services:
+  voicehelper:
+    build: voicehelper
+    command: gunicorn voicehelper.asgi:application -k uvicorn.workers.UvicornWorker 8080
+    container_name: voicehelper
+    depends_on:
+      - db
+    expose:
+      - 8080
+    env_file:
+      - voicehelper/env.prod
+    volumes:
+      - voicehelper-app-logs:/var/log/
+    restart: always
+
+  nginx:
+    build: nginx
+    container_name: ugc_nginx
+    ports:
+      - 8072:8072
+      - 8092:8092
+    depends_on:
+      - voicehelper
+    volumes:
+      - nginx-logs:/var/log/nginx/
+    restart: always
+
+  db:
+    image: postgres:12.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=000
+      - POSTGRES_DB=voice
+    restart: unless-stopped
+
+volumes:
+  voicehelper-app-logs:
+  nginx-logs:
+  postgres_data:
+
+

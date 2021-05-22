@@ -1,17 +1,17 @@
 import random
-import requests
 
+import requests
 from config.config import BASE_URL
 
 
-def create_request(u):
-    r = requests.get(u)
-    if r.status_code != 200:
+def create_request(url):
+    response = requests.get(url)
+    if response.status_code != 200:
         return "Сервер не отвечает"
-    elif not len(r.json()):
+    elif not len(response.json()):
         return "Ничего не нашлось"
     else:
-        return r.json()
+        return response.json()
 
 
 def get_random_items(u, field):

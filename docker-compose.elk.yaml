@@ -1,0 +1,49 @@
+version: "3.7"
+
+services:
+  filebeat-nginx:
+    image: docker.elastic.co/beats/filebeat:7.12.0
+    container_name: filebeat-nginx
+    volumes:
+      - nginx-logs:/var/log/nginx:ro
+      - ./elk/filebeat/filebeat-nginx.yml:/usr/share/filebeat/filebeat.yml
+    depends_on:
+      - elasticsearch
+      - kibana
+
+  filebeat-voicehelper-app:
+    image: docker.elastic.co/beats/filebeat:7.12.0
+    container_name: filebeat-voicehelper-app
+    volumes:
+      - voicehelper-app-logs:/var/log/voicehelper-app:ro
+      - ./elk/filebeat/filebeat-voicehelper-app-logs.yml:/usr/share/filebeat/filebeat.yml
+    depends_on:
+      - elasticsearch
+      - kibana
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    container_name: elk-elastic
+    environment:
+      discovery.type: single-node
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.2
+    container_name: elk-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      SERVER_MAXPAYLOADBYTES: 4194304
+    depends_on:
+      - elasticsearch
+
+volumes:
+  voicehelper-app-logs:
+    name: voicehelper-app-logs
+  nginx-logs:
+    name: nginx-logs
+
+networks:
+  default:
+    external:
+      name: authsprint2_dotnetwork
