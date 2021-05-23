@@ -15,6 +15,11 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def main(request):
+    """
+    Главная функция через которую идёт обработка
+    :param request: объект запроса
+    :return: ответ в формате json
+    """
     body = json.loads(request.body)
     logger.info(body)
     response = create_response_objs(body)
@@ -25,9 +30,13 @@ def main(request):
 
 
 def handle_dialog(response, request):
+    # управление диалогом
+    # если нет в объекте текста, то есть фраза первая - начинаем диалог
     if not request.text:
         first_phrase(response)
+    # если диалог идёт - продолжаем его
     elif request.dialogue:
         continue_dialogue(response, request)
+    # если диалога нет - ищем ключевые слова во фразе
     else:
         execute_command_with_name(request, response)

@@ -1,59 +1,66 @@
 from random import choice
-
-import Levenshtein
-import pymorphy2
+import typing
 
 from phrases.command_api import (get_actor_films, get_best_films_for_year,
                                  get_description, get_film_actor,
                                  get_film_director, get_film_duration,
                                  get_film_information, get_film_writer,
-                                 get_good_film, get_good_films,
+                                 get_one_good_film, get_many_good_films,
                                  get_many_new_films, get_one_new_film)
+from phrases.utils import command_matcher, pymorpy_normalizer
 
 from .models import CommandPhrases
 
 
-def get_vaulue_for_obj(name):
+def get_value_for_obj(name):
     return tuple(CommandPhrases.objects.filter(name=name).first().values)
 
 
+class Command:
+    def __init__(self, name: str, executor: typing.Callable):
+        self.name = name
+        self.executor = executor
+
+    def __call__(self, *args, **kwargs):
+        return self.executor(*args, **kwargs)
+
+    def get_phrases(self) -> typing.Iterable:
+        return tuple(self.executor.objects.filter(name=self.name).values_list('values', flat=True)[0])
+
+
 commands = {
-    get_vaulue_for_obj('best_films_for_year'): get_best_films_for_year,
-    get_vaulue_for_obj('full_film_data'): get_film_information,
-    get_vaulue_for_obj('new_films'): get_many_new_films,
-    get_vaulue_for_obj('new_film'): get_one_new_film,
-    get_vaulue_for_obj('good_film'): get_good_film,
-    get_vaulue_for_obj('good_films'): get_good_films,
-    get_vaulue_for_obj('description'): get_description,
-    get_vaulue_for_obj('film_actor'): get_film_actor,
-    get_vaulue_for_obj('film_writer'): get_film_writer,
-    get_vaulue_for_obj('film_director'): get_film_director,
-    get_vaulue_for_obj('actor_films'): get_actor_films,
-    get_vaulue_for_obj('film_duration'): get_film_duration,
+    Command(name='best_films_for_year', executor=CommandPhrases).get_phrases(): get_best_films_for_year,
+    Command(name='full_film_data', executor=CommandPhrases).get_phrases(): get_film_information,
+    Command(name='new_films', executor=CommandPhrases).get_phrases(): get_many_new_films,
+    Command(name='new_film', executor=CommandPhrases).get_phrases(): get_one_new_film,
+    Command(name='good_film', executor=CommandPhrases).get_phrases(): get_one_good_film,
+    Command(name='good_films', executor=CommandPhrases).get_phrases(): get_many_good_films,
+    Command(name='description', executor=CommandPhrases).get_phrases(): get_description,
+    Command(name='film_actor', executor=CommandPhrases).get_phrases(): get_film_actor,
+    Command(name='film_writer', executor=CommandPhrases).get_phrases(): get_film_writer,
+    Command(name='film_director', executor=CommandPhrases).get_phrases(): get_film_director,
+    Command(name='actor_films', executor=CommandPhrases).get_phrases(): get_actor_films,
+    Command(name='film_duration', executor=CommandPhrases).get_phrases(): get_film_duration,
 }
 
 not_understand_phrases = ['Не знаю']
+import pymorphy2
 
 
 def execute_command_with_name(verbal_command, res):
-    morph = pymorphy2.MorphAnalyzer()
+    """
+    В этой функции проверяем есть ли в ответе пользователя ключевые фразы,
+    если да - отдаём информацию которую запрашивали
+    :param verbal_command: фраза, которую произнёс пользователь
+    :param res: в объект ответа кладём текст, которым надо ответить
+    :return:
+    """
     # приводим токены фразы пользователя к нормальной форме
-    verbal_tokens = [morph.parse(name)[0].normal_form for name in verbal_command.tokens]
+    verbal_tokens = pymorpy_normalizer(verbal_command.text)
     for pattern_phrases in commands.keys():
-        for pattern_phrase in pattern_phrases:
-            # приводим токены ключевой фразы к нормальной форме
-            pattern_tokens = [morph.parse(name)[0].normal_form for name in pattern_phrase.split(" ")]
-            distance = 0
-            union_phrases = []
-            for pattern_token in pattern_tokens:
-                # ищем ближайший к токену ключевой фразы токен фразу пользователя
-                sorted_tokens = sorted(verbal_tokens, key=lambda x: Levenshtein.distance(x, pattern_token))
-                distance += Levenshtein.distance(sorted_tokens[0], pattern_token)
-                union_phrases.append(sorted_tokens[0])
-            # если ошибок меньше чем 1 на 10 - вызываем команду
-            if distance < len(pattern_phrase) / 10:
-                # передаём команде слова фразы пользователя, которые не совпали
-                res.text = commands[pattern_phrases](" ".join((p for p in verbal_tokens if p not in union_phrases)))
-                break
+        is_match, additional_words = command_matcher(verbal_tokens, pattern_phrases)
+        if is_match:
+            res.text = commands[pattern_phrases](additional_words)
+            break
     if not res.text:
         res.text = choice(not_understand_phrases)

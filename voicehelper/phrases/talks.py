@@ -2,7 +2,7 @@ import random
 
 import pymorphy2
 
-from phrases.command_api import (get_good_film, get_one_new_film,
+from phrases.command_api import (get_one_good_film, get_one_new_film,
                                      get_random_film, get_random_film_by_genre)
 
 from .models import VariousPhases
@@ -17,7 +17,12 @@ morph = pymorphy2.MorphAnalyzer()
 
 
 def get_phrases(ph_type):
-    return [morph.parse(phrases.value)[0].normal_form for phrases in VariousPhases.objects.filter(type__type=ph_type).all()]
+    """
+    :param ph_type: тип фраз
+    :return: все фразы данного типа
+    """
+    return [morph.parse(phrases.value)[0].normal_form
+            for phrases in VariousPhases.objects.filter(type__type=ph_type).all()]
 
 
 suggest_phrases = get_phrases('suggest_phrases')
@@ -27,6 +32,11 @@ new_phrases = get_phrases('new_phrases')
 
 
 def first_phrase(res):
+    """
+    Случайно выбираем один из диалогов и говорим его приветственную фразу
+    :param res: объект ответа
+    :return: возвращаем объект ответа с текстом
+    """
     number = random.randint(1, 3)
     res.dialogue = number
     res.speech = 1
@@ -35,6 +45,12 @@ def first_phrase(res):
 
 
 def perform_dialogue_new_or_best_film(res, req):
+    """
+    Диалог где пользователь выбирает хочет он новый или популярный фильм
+    :param res: объект ответа
+    :param req: объект запроса
+    :return:
+    """
     speech_number = req.speech
     if speech_number == 1:
         if set(req.tokens) & set(suggest_phrases):
@@ -48,11 +64,17 @@ def perform_dialogue_new_or_best_film(res, req):
         if set(req.tokens) & set(new_phrases):
             res.text = get_one_new_film("") + " - этот фильм вышел недавно. " + random.choice(addition_phrases)
         else:
-            res.text = get_good_film("") + " - у этого фильма высокий рейтинг. " + random.choice(addition_phrases)
+            res.text = get_one_good_film("") + " - у этого фильма высокий рейтинг. " + random.choice(addition_phrases)
         res.dialogue = 0
 
 
 def perform_dialogue_random_film_all_info(res, req):
+    """
+    Диалог где рассказывают информацию про случайный фильм
+    :param res: объект ответа
+    :param req: объект запроса
+    :return:
+    """
     if set(req.tokens) & set(suggest_phrases):
         f = get_random_film(None)
         res.dialogue = 0
@@ -65,6 +87,12 @@ def perform_dialogue_random_film_all_info(res, req):
 
 
 def perform_dialogue_genre(res, req):
+    """
+    Диалог где пользователь выбирает жанр для фильма
+    :param res: объект ответа
+    :param req: объект запроса
+    :return:
+    """
     if any([t.startswith('фантаст') for t in req.tokens]):
         genre = 'Fantasy'
     elif any([t.startswith('мульт') for t in req.tokens]):
@@ -86,5 +114,11 @@ dialogs_functions = [perform_dialogue_new_or_best_film,
 
 
 def continue_dialogue(res, req):
+    """
+    Последующие фразы в зависимости от диалога
+    :param res: объект ответа
+    :param req: объект запроса
+    :return:
+    """
     dialogue_number = req.dialogue
     dialogs_functions[dialogue_number - 1](res, req)
