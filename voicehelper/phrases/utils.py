@@ -1,12 +1,12 @@
 import Levenshtein
 import pymorphy2
-import typing
+from typing import List, Tuple
 
 from config.config import LEVENSHTEIN_DIVERCE
 from phrases.validators import Request, Response
 
 
-def create_request_objs(request):
+def create_request_objs(request: dict) -> Request:
     """
     Преобразуем полученный json в объект
     :param request: что мы получили по http
@@ -23,7 +23,7 @@ def create_request_objs(request):
                    speech=request.get('state', {}).get('session', {}).get('speech', 0))
 
 
-def create_response_objs(body):
+def create_response_objs(body: dict) -> Response:
     """
     Создаёт объект ответа
     :param body: что мы получили по http
@@ -35,7 +35,7 @@ def create_response_objs(body):
                     version=body['version'])
 
 
-def command_matcher(verbal_tokens: typing.List[str], pattern_phrases: typing.List[str]):
+def command_matcher(verbal_tokens: List[str], pattern_phrases: List[str]) -> Tuple[bool, str]:
     """
     Тут проверяем есть ли совпадение фразы пользователя с ключевыми фразами
     :param verbal_tokens: фраза пользователя разбитая на токены
@@ -54,7 +54,7 @@ def command_matcher(verbal_tokens: typing.List[str], pattern_phrases: typing.Lis
             return False, ""
 
 
-def pymorpy_normalizer(phrase):
+def pymorpy_normalizer(phrase: str) -> List[str]:
     """
     :param phrase: фраза пользователя
     :return: фраза пользователя разбитая на токены
@@ -63,7 +63,7 @@ def pymorpy_normalizer(phrase):
     return [morph.parse(name)[0].normal_form for name in phrase.split(" ")]
 
 
-def levenshtein_processing(pattern_tokens, verbal_tokens):
+def levenshtein_processing(pattern_tokens: List[str], verbal_tokens: List[str]) -> Tuple[int, List[str]]:
     """
     ищем ближайший к токену ключевой фразы токен фразу пользователя
     :param pattern_tokens: ключевая фраза из базы

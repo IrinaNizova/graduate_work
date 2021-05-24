@@ -7,7 +7,7 @@ from phrases.requests_to_api import (get_film_param, get_person_param,
                                      get_random_items)
 
 
-def get_many_new_films(_):
+def get_many_new_films(_: None) -> str:
     """
     выбирает 3 случайных фильма с первой страницы выдачи, отсоритованной по дате
     :param _:
@@ -17,7 +17,7 @@ def get_many_new_films(_):
         (BASE_URL, URL_FILM_LIST_SORT.format('-created_at'))), 'title')
 
 
-def get_one_new_film(_):
+def get_one_new_film(_: None) -> str:
     """
     выбирает случайный фильм с первой страницы выдачи, отсоритованной по дате
     :param _:
@@ -27,7 +27,7 @@ def get_one_new_film(_):
         (BASE_URL, URL_FILM_LIST_SORT.format('-created_at'))), 'title')
 
 
-def get_one_good_film(_):
+def get_one_good_film(_: None) -> str:
     """
     выбирает случайный фильм с первой страницы выдачи, отсортированной по рейтингу
     :param _:
@@ -37,7 +37,7 @@ def get_one_good_film(_):
         (BASE_URL, URL_FILM_LIST_SORT.format('-imdb_rating'))), 'title')
 
 
-def get_many_good_films(_):
+def get_many_good_films(_: None) -> str:
     """
     выбирает 3 случайных фильма с первой страницы выдачи, отсортированной по рейтингу
     :param _:
@@ -47,7 +47,7 @@ def get_many_good_films(_):
         (BASE_URL, URL_FILM_LIST_SORT.format('-imdb_rating'))), 'title')
 
 
-def get_film_duration(name):
+def get_film_duration(name: str) -> str:
     """
     продлжительность фильма
     :param name: название фильма
@@ -58,7 +58,7 @@ def get_film_duration(name):
     return duration + " минуты" if duration.isnumeric() else duration
 
 
-def get_film_actor(name):
+def get_film_actor(name: str) -> str:
     """
     актёры из фильма
     :param name: название фильма
@@ -68,7 +68,7 @@ def get_film_actor(name):
         (BASE_URL, URL_FILM_SEARCH, name)), 'actors_names')
 
 
-def get_film_writer(name):
+def get_film_writer(name: str) -> str:
     """
     сценаристы фильма
     :param name: название фильма
@@ -78,7 +78,7 @@ def get_film_writer(name):
         (BASE_URL, URL_FILM_SEARCH, name)), 'writers_names')
 
 
-def get_film_director(name):
+def get_film_director(name: str) -> str:
     """
     режиссёр фильма
     :param name: название фильма
@@ -88,7 +88,7 @@ def get_film_director(name):
         (BASE_URL, URL_FILM_SEARCH, name)), 'director')
 
 
-def get_random_film(_):
+def get_random_film(_: None) -> dict:
     """
     случайный фильм
     :param _:
@@ -97,7 +97,7 @@ def get_random_film(_):
     return get_random_film_data(BASE_URL + 'film?page[size]=50&sort=-imdb_rating')
 
 
-def get_random_film_by_genre(genre):
+def get_random_film_by_genre(genre: str) -> dict:
     """
     случайный фильм заданного жанра
     :param genre: название жанра
@@ -107,7 +107,7 @@ def get_random_film_by_genre(genre):
     return get_random_film_data(BASE_URL + search_params.format(genre))
 
 
-def get_description(name):
+def get_description(name: str) -> str:
     """
     описание фильма
     :param name: название фильма
@@ -116,7 +116,7 @@ def get_description(name):
     return get_film_param("".join((BASE_URL, URL_FILM_SEARCH, name)), 'description')
 
 
-def get_actor_films(name):
+def get_actor_films(name: str) -> str:
     """
     фильмы, в которых сняля актёр
     :param name: имя актёра
@@ -126,7 +126,7 @@ def get_actor_films(name):
         (BASE_URL, URL_FILM_SEARCH, name)), 'films_as_actor')
 
 
-def get_director_films(name):
+def get_director_films(name: str) -> str:
     """
     фильмы, которые снял режиссёр
     :param name: имя режиссёра
@@ -136,7 +136,7 @@ def get_director_films(name):
         (BASE_URL, URL_FILM_SEARCH, name)), 'films_as_director')
 
 
-def get_writer_films(name):
+def get_writer_films(name: str) -> str:
     """
     фильмы, которые написал сценарист
     :param name: имя сценариста
@@ -146,7 +146,7 @@ def get_writer_films(name):
         (BASE_URL, URL_FILM_SEARCH, name)), 'films_as_writer')
 
 
-def get_best_films_for_year(params):
+def get_best_films_for_year(params: str) -> str:
     """
     лучшие фильмы одного года
     :param params: строка где содержится год
@@ -169,7 +169,7 @@ def get_best_films_for_year(params):
         return get_many_good_films(None)
 
 
-def get_film_information(name):
+def get_film_information(name: str) -> str:
     """
     вся информация о фильме
     :param name: название фильма

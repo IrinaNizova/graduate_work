@@ -1,10 +1,11 @@
 import random
+from typing import Union
 
 import requests
 from config.config import BASE_URL
 
 
-def create_request(url):
+def create_request(url: str) -> Union[str, dict]:
     """
     заспрос к movie api
     :param url: адрес запроса
@@ -19,7 +20,7 @@ def create_request(url):
         return response.json()
 
 
-def get_random_items(url, field):
+def get_random_items(url: str, field: str) -> str:
     """
     запрашиваем первую страницу ответов и с неё выбираем 3 случайных ответа
     :param url: адрес запроса
@@ -35,7 +36,7 @@ def get_random_items(url, field):
     return items if items else "Ничего не найдено"
 
 
-def get_random_item(url, field):
+def get_random_item(url: str, field: str) -> str:
     """
     запрашиваем первую страницу ответов и с неё выбираем случайный ответ
     :param url: адрес запроса
@@ -49,7 +50,7 @@ def get_random_item(url, field):
     return random.choice(items_list) if items_list else "Ничего не найдено"
 
 
-def get_random_film_data(url):
+def get_random_film_data(url: str) -> dict:
     """
     Информация про случайный фильм
     :param url: адрес запроса
@@ -61,7 +62,7 @@ def get_random_film_data(url):
     return r.json()
 
 
-def get_film_param(url, param=None):
+def get_film_param(url: str, param: Union[str, None] = None) -> Union[str, dict]:
     """
     Информация про конкретный фильм
     :param url: адрес запроса
@@ -81,7 +82,7 @@ def get_film_param(url, param=None):
         return str(r.json()[param])
 
 
-def get_person_param(url, param):
+def get_person_param(url: str, param: str) -> str:
     """
     Информация по персоне
     :param url: адрес запроса

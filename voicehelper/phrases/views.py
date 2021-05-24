@@ -8,6 +8,7 @@ from config.logger import LOGGER
 from phrases.command_actions import execute_command_with_name
 from phrases.talks import continue_dialogue, first_phrase
 from phrases.utils import create_request_objs, create_response_objs
+from phrases.validators import Request, Response
 
 logging.config.dictConfig(LOGGER)
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ def main(request):
     return JsonResponse(response.to_json())
 
 
-def handle_dialog(response, request):
+def handle_dialog(response: Response, request: Request) -> None:
     # управление диалогом
     # если нет в объекте текста, то есть фраза первая - начинаем диалог
     if not request.text:

@@ -12,7 +12,7 @@ class Response(BaseModel):
     dialogue: Optional[int]
     speech: Optional[int]
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return {
             "response": {
                 "text": self.text,

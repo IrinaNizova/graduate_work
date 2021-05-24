@@ -1,10 +1,11 @@
 import random
+from typing import List
 
 import pymorphy2
 
 from phrases.command_api import (get_one_good_film, get_one_new_film,
                                      get_random_film, get_random_film_by_genre)
-
+from phrases.validators import Request, Response
 from .models import VariousPhases
 
 dialogue_new_or_best_film = ["Хотите, посоветую вам фильм?", "Вам поновее или классику?"]
@@ -16,7 +17,7 @@ dialogs = [dialogue_new_or_best_film, dialogue_random_film_all_info, dialogue_ge
 morph = pymorphy2.MorphAnalyzer()
 
 
-def get_phrases(ph_type):
+def get_phrases(ph_type: str) -> List[str]:
     """
     :param ph_type: тип фраз
     :return: все фразы данного типа
@@ -31,7 +32,7 @@ addition_phrases = get_phrases('addition_phrases')
 new_phrases = get_phrases('new_phrases')
 
 
-def first_phrase(res):
+def first_phrase(res: Response) -> Response:
     """
     Случайно выбираем один из диалогов и говорим его приветственную фразу
     :param res: объект ответа
@@ -44,7 +45,7 @@ def first_phrase(res):
     return res
 
 
-def perform_dialogue_new_or_best_film(res, req):
+def perform_dialogue_new_or_best_film(res: Response, req: Request) -> None:
     """
     Диалог где пользователь выбирает хочет он новый или популярный фильм
     :param res: объект ответа
@@ -68,7 +69,7 @@ def perform_dialogue_new_or_best_film(res, req):
         res.dialogue = 0
 
 
-def perform_dialogue_random_film_all_info(res, req):
+def perform_dialogue_random_film_all_info(res: Response, req: Request) -> None:
     """
     Диалог где рассказывают информацию про случайный фильм
     :param res: объект ответа
@@ -86,7 +87,7 @@ def perform_dialogue_random_film_all_info(res, req):
     res.dialogue = 0
 
 
-def perform_dialogue_genre(res, req):
+def perform_dialogue_genre(res: Response, req: Request) -> None:
     """
     Диалог где пользователь выбирает жанр для фильма
     :param res: объект ответа
@@ -113,7 +114,7 @@ dialogs_functions = [perform_dialogue_new_or_best_film,
                      perform_dialogue_genre]
 
 
-def continue_dialogue(res, req):
+def continue_dialogue(res: Response, req: Request) -> None:
     """
     Последующие фразы в зависимости от диалога
     :param res: объект ответа
