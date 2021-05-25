@@ -29,9 +29,11 @@ def create_response_objs(body: dict) -> Response:
     :param body: что мы получили по http
     :return: объект класса Response
     """
-    return Response(user_id=body['session']['user_id'],
+    return Response(user_id=body['session']['user']['user_id'],
                     session_id=body['session']['session_id'],
                     message_id=body['session']['message_id'],
+                    skill_id=body['session']['skill_id'],
+                    application_id=body['session']['application']['application_id'],
                     version=body['version'])
 
 

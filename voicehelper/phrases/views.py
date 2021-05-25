@@ -1,7 +1,7 @@
 import logging.config
 import json
 
-from django.http import JsonResponse
+from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from config.logger import LOGGER
@@ -27,7 +27,7 @@ def main(request):
     request = create_request_objs(body)
     handle_dialog(response, request)
     logger.info(response.to_json())
-    return JsonResponse(response.to_json())
+    return HttpResponse(json.dumps(response.to_json()))
 
 
 def handle_dialog(response: Response, request: Request) -> None:
