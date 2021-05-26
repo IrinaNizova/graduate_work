@@ -29,11 +29,11 @@ def create_response_objs(body: dict) -> Response:
     :param body: что мы получили по http
     :return: объект класса Response
     """
-    return Response(user_id=body['session']['user']['user_id'],
+    return Response(user_id=body['session']['user']['user_id'] if body['session'].get('user') else body['session']['user_id'],
                     session_id=body['session']['session_id'],
                     message_id=body['session']['message_id'],
                     skill_id=body['session']['skill_id'],
-                    application_id=body['session']['application']['application_id'],
+                    application_id=body['session']['application']['application_id'] if body['session'].get('application') else "",
                     version=body['version'])
 
 
@@ -52,8 +52,7 @@ def command_matcher(verbal_tokens: List[str], pattern_phrases: List[str]) -> Tup
         if distance < len(pattern_phrase) / LEVENSHTEIN_DIVERCE:
             # передаём команде слова фразы пользователя, которые не совпали
             return True, " ".join((p for p in verbal_tokens if p not in union_phrases))
-        else:
-            return False, ""
+    return False, ""
 
 
 def pymorpy_normalizer(phrase: str) -> List[str]:

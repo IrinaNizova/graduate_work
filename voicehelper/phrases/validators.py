@@ -30,6 +30,10 @@ class Response(BaseModel):
                 "end_session": False,
                 "text": self.text
             },
+            "session_state": {
+                "dialogue": self.dialogue,
+                "speech": self.speech
+            }
         }
 
 

@@ -6,7 +6,8 @@ from phrases.command_api import (get_actor_films, get_best_films_for_year,
                                  get_film_director, get_film_duration,
                                  get_film_information, get_film_writer,
                                  get_one_good_film, get_many_good_films,
-                                 get_many_new_films, get_one_new_film)
+                                 get_many_new_films, get_one_new_film,
+                                 get_director_films, get_writer_films)
 from phrases.utils import command_matcher, pymorpy_normalizer
 from phrases.validators import Response
 
@@ -33,13 +34,15 @@ commands = {
     'full_film_data': get_film_information,
     'new_films': get_many_new_films,
     'new_film': get_one_new_film,
-    'good_film': get_one_good_film,
     'good_films': get_many_good_films,
+    'good_film': get_one_good_film,
     'description': get_description,
+    'writer_films': get_writer_films,
     'film_actor': get_film_actor,
     'film_writer': get_film_writer,
     'film_director': get_film_director,
     'actor_films': get_actor_films,
+    'director_films': get_director_films,
     'film_duration': get_film_duration,
 }
 
@@ -60,6 +63,7 @@ def execute_command_with_name(verbal_command: str, res: Response) -> None:
         pattern_phrases = tuple(pattern_object.values)
         is_match, additional_words = command_matcher(verbal_tokens, pattern_phrases)
         if is_match:
+            print(pattern_object.name)
             res.text = commands[pattern_object.name](additional_words)
             break
     if not res.text:

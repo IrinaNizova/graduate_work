@@ -36,4 +36,4 @@ class VariousPhases(models.Model):
 
     class Meta:
         verbose_name = _('фраза')
-        verbose_name_plural = _('одтельные фразы')
+        verbose_name_plural = _('отдельные фразы')

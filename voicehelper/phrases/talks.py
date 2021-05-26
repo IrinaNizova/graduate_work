@@ -22,8 +22,17 @@ def get_phrases(ph_type: str) -> List[str]:
     :param ph_type: тип фраз
     :return: все фразы данного типа
     """
-    return [morph.parse(phrases.value)[0].normal_form
+    return [phrases.value
             for phrases in VariousPhases.objects.filter(type__type=ph_type).all()]
+
+
+def get_phrase_tokens(phrases_type: List[str]) -> List[str]:
+    """
+    :param ph_type: тип фраз
+    :return: все фразы данного типа
+    """
+    return [morph.parse(phrases)[0].normal_form
+            for phrases in phrases_type]
 
 
 suggest_phrases = get_phrases('suggest_phrases')
@@ -54,7 +63,7 @@ def perform_dialogue_new_or_best_film(res: Response, req: Request) -> None:
     """
     speech_number = req.speech
     if speech_number == 1:
-        if set(req.tokens) & set(suggest_phrases):
+        if set(req.tokens) & set(get_phrase_tokens(suggest_phrases)):
             res.dialogue = 1
             res.speech = 2
             res.text = dialogs[0][1]
@@ -76,7 +85,7 @@ def perform_dialogue_random_film_all_info(res: Response, req: Request) -> None:
     :param req: объект запроса
     :return:
     """
-    if set(req.tokens) & set(suggest_phrases):
+    if set(req.tokens) & set(get_phrase_tokens(suggest_phrases)):
         f = get_random_film(None)
         res.dialogue = 0
         res.text = "Фильм {} в жанре {}. Пользователи оценили его в {} звёзд. " \

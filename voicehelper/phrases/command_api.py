@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from config.config import BASE_URL, URL_FILM_LIST_SORT, URL_FILM_SEARCH
+from config.config import BASE_URL, URL_FILM_LIST_SORT, URL_FILM_SEARCH, URL_PERSON_SEARCH
 
 from phrases.requests_to_api import (get_film_param, get_person_param,
                                      get_random_film_data, get_random_item,
@@ -123,7 +123,7 @@ def get_actor_films(name: str) -> str:
     :return: строка с фильмами где снялся актёр
     """
     return get_person_param("".join(
-        (BASE_URL, URL_FILM_SEARCH, name)), 'films_as_actor')
+        (BASE_URL, URL_PERSON_SEARCH, name)), 'films_as_actor')
 
 
 def get_director_films(name: str) -> str:
@@ -133,7 +133,7 @@ def get_director_films(name: str) -> str:
     :return:  строка с фильмами которые снял режиссёр
     """
     return get_person_param("".join(
-        (BASE_URL, URL_FILM_SEARCH, name)), 'films_as_director')
+        (BASE_URL, URL_PERSON_SEARCH, name)), 'films_as_director')
 
 
 def get_writer_films(name: str) -> str:
@@ -143,7 +143,7 @@ def get_writer_films(name: str) -> str:
     :return: строка с фильмами которые написал сценарист
     """
     return get_person_param("".join(
-        (BASE_URL, URL_FILM_SEARCH, name)), 'films_as_writer')
+        (BASE_URL, URL_PERSON_SEARCH, name)), 'films_as_writer')
 
 
 def get_best_films_for_year(params: str) -> str:
