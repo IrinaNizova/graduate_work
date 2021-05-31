@@ -3,16 +3,10 @@ from typing import List
 
 import pymorphy2
 
-from phrases.command_api import (get_one_good_film, get_one_new_film,
-                                     get_random_film, get_random_film_by_genre)
-from phrases.validators import Request, Response
+from phrases import command_api
+from phrases import constant_phrases
 from .models import VariousPhases
 
-dialogue_new_or_best_film = ["Хотите, посоветую вам фильм?", "Вам поновее или классику?"]
-dialogue_genre = ["Вы больше любите фантастику, мультфильмы или комедии?", "В каком из них посоветовать вам фильм?"]
-dialogue_random_film_all_info = ["Рассказать вам про какой-нибудь фильм?"]
-
-dialogs = [dialogue_new_or_best_film, dialogue_random_film_all_info, dialogue_genre]
 
 morph = pymorphy2.MorphAnalyzer()
 
@@ -22,17 +16,15 @@ def get_phrases(ph_type: str) -> List[str]:
     :param ph_type: тип фраз
     :return: все фразы данного типа
     """
-    return [phrases.value
-            for phrases in VariousPhases.objects.filter(type__type=ph_type).all()]
+    return VariousPhases.objects.filter(type__type=ph_type).values_list('value', flat=True)
 
 
 def get_phrase_tokens(phrases_type: List[str]) -> List[str]:
     """
-    :param ph_type: тип фраз
+    :param phrases_type: тип фраз
     :return: все фразы данного типа
     """
-    return [morph.parse(phrases)[0].normal_form
-            for phrases in phrases_type]
+    return [morph.parse(phrases)[0].normal_form for phrases in phrases_type]
 
 
 suggest_phrases = get_phrases('suggest_phrases')
@@ -41,94 +33,93 @@ addition_phrases = get_phrases('addition_phrases')
 new_phrases = get_phrases('new_phrases')
 
 
-def first_phrase(res: Response) -> Response:
+def has_intersection(text_tokens, pattern_tokens):
+    return set(text_tokens) & set(pattern_tokens)
+
+
+def first_phrase() -> dict:
     """
     Случайно выбираем один из диалогов и говорим его приветственную фразу
-    :param res: объект ответа
-    :return: возвращаем объект ответа с текстом
+    :return: словарь с текстом, номером диалога и номером реплики
     """
-    number = random.randint(1, 3)
-    res.dialogue = number
-    res.speech = 1
-    res.text = "Здравствуйте. Приветствую вас в нашем кинотеатре. " + dialogs[number - 1][0]
-    return res
+    dialogue_number = random.randint(1, len(DIALOGS) + 1)
+    text = constant_phrases.GREETING_PHRASE + DIALOGS[dialogue_number]['phrases'][0]
+    return {'dialogue': dialogue_number, 'speech': 1, 'text': text}
 
 
-def perform_dialogue_new_or_best_film(res: Response, req: Request) -> None:
+def perform_dialogue_new_or_best_film(text_tokens: list, speech_number: int) -> dict:
     """
     Диалог где пользователь выбирает хочет он новый или популярный фильм
-    :param res: объект ответа
-    :param req: объект запроса
-    :return:
+    :param text_tokens: слова из запроса
+    :param speech_number: номер реплики
+    :return: словарь с текстом, номером диалога и номером реплики
     """
-    speech_number = req.speech
     if speech_number == 1:
-        if set(req.tokens) & set(get_phrase_tokens(suggest_phrases)):
-            res.dialogue = 1
-            res.speech = 2
-            res.text = dialogs[0][1]
+        if has_intersection(text_tokens, get_phrase_tokens(suggest_phrases)):
+            return {"text": DIALOGS[1]['phrases'][1], "dialogue": 1, "speech": 2}
         else:
-            res.dialogue = 0
-            res.text = ". ".join((random.choice(regret_phrases), random.choice(addition_phrases)))
+            text = ". ".join((random.choice(regret_phrases), random.choice(addition_phrases)))
+            return {"text": text, "dialogue": 0}
     elif speech_number == 2:
-        if set(req.tokens) & set(new_phrases):
-            res.text = get_one_new_film("") + " - этот фильм вышел недавно. " + random.choice(addition_phrases)
+        if has_intersection(text_tokens, new_phrases):
+            text = command_api.get_one_new_film("") + constant_phrases.THIS_FILM_NEW + random.choice(addition_phrases)
         else:
-            res.text = get_one_good_film("") + " - у этого фильма высокий рейтинг. " + random.choice(addition_phrases)
-        res.dialogue = 0
+            text = command_api.get_one_good_film("") + constant_phrases.THIS_FILM_GOOD + random.choice(addition_phrases)
+        return {"text": text, "dialogue": 0}
 
 
-def perform_dialogue_random_film_all_info(res: Response, req: Request) -> None:
+def perform_dialogue_random_film_all_info(text_tokens: list, _) -> dict:
     """
     Диалог где рассказывают информацию про случайный фильм
-    :param res: объект ответа
-    :param req: объект запроса
-    :return:
+    :param text_tokens: слова из запроса
+    :param _:
+    :return: словарь с текстом и номером диалога
     """
-    if set(req.tokens) & set(get_phrase_tokens(suggest_phrases)):
-        f = get_random_film(None)
-        res.dialogue = 0
-        res.text = "Фильм {} в жанре {}. Пользователи оценили его в {} звёзд. " \
-                   "Вот про что он {}. ".format(f['title'], f['genre'][0], f['imdb_rating'], f['description']) \
+    if has_intersection(text_tokens, get_phrase_tokens(suggest_phrases)):
+        f = command_api.get_random_film(None)
+        text = constant_phrases.FILM_INFORMATION.format(f['title'], f['genre'][0], f['imdb_rating'], f['description']) \
                    + random.choice(addition_phrases)
     else:
-        res.text = ". ".join((random.choice(regret_phrases), random.choice(addition_phrases)))
-    res.dialogue = 0
+        text = ". ".join((random.choice(regret_phrases), random.choice(addition_phrases)))
+    return {"text": text, "dialogue": 0}
 
 
-def perform_dialogue_genre(res: Response, req: Request) -> None:
+def perform_dialogue_genre(text_tokens: list, _) -> dict:
     """
     Диалог где пользователь выбирает жанр для фильма
-    :param res: объект ответа
-    :param req: объект запроса
-    :return:
+    :param text_tokens: слова из запроса
+    :param _:
+    :return: словарь с текстом и номером диалога
     """
-    if any([t.startswith('фантаст') for t in req.tokens]):
+    if any([t.startswith('фантаст') for t in text_tokens]):
         genre = 'Fantasy'
-    elif any([t.startswith('мульт') for t in req.tokens]):
+    elif any([t.startswith('мульт') for t in text_tokens]):
         genre = 'Animation'
-    elif any([t.startswith('комед') for t in req.tokens]):
+    elif any([t.startswith('комед') for t in text_tokens]):
         genre = 'Comedy'
     else:
-        res.text = ". ".join((random.choice(regret_phrases), random.choice(addition_phrases)))
-        return
-    f = get_random_film_by_genre(genre)
-    res.dialogue = 0
-    res.text = "Тогда можем вам порекомендовать фильм {}. Пользователи оценили его в {} звёзд.".\
-        format(f['title'], f['imdb_rating']) + random.choice(addition_phrases)
+        text = ". ".join((random.choice(regret_phrases), random.choice(addition_phrases)))
+        return {"text": text, "dialogue": 0}
+    f = command_api.get_random_film_by_genre(genre)
+    text = constant_phrases.RECOMMENDED_FILM.format(f['title'], f['imdb_rating']) \
+           + random.choice(addition_phrases)
+    return {"text": text, "dialogue": 0}
 
 
-dialogs_functions = [perform_dialogue_new_or_best_film,
-                     perform_dialogue_random_film_all_info,
-                     perform_dialogue_genre]
+DIALOGS = {
+    1: {'phrases': ("Хотите, посоветую вам фильм?", "Вам поновее или классику?"),
+        'performer': perform_dialogue_new_or_best_film},
+    2: {'phrases': ("Рассказать вам про какой-нибудь фильм?",), 'performer': perform_dialogue_random_film_all_info},
+    3: {'phrases': ("Вы больше любите фантастику, мультфильмы или комедии?",), 'performer': perform_dialogue_genre},
+}
 
 
-def continue_dialogue(res: Response, req: Request) -> None:
+def continue_dialogue(text_tokens, dialogue_number, speech_number) -> dict:
     """
     Последующие фразы в зависимости от диалога
-    :param res: объект ответа
-    :param req: объект запроса
+    :param text_tokens: слова из запроса
+    :param dialogue_number: номер диалога
+    param speech_number: номер реплики
     :return:
     """
-    dialogue_number = req.dialogue
-    dialogs_functions[dialogue_number - 1](res, req)
+    return DIALOGS[dialogue_number]['performer'](text_tokens, speech_number)

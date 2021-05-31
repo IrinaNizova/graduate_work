@@ -6,35 +6,54 @@ from config.config import LEVENSHTEIN_DIVERCE
 from phrases.validators import Request, Response
 
 
-def create_request_objs(request: dict) -> Request:
+def get_talk_params_from_request(request: dict) -> tuple:
     """
-    Преобразуем полученный json в объект
-    :param request: что мы получили по http
-    :return: объект класса Request
+    :param request: json запроса как он пришёл
+    :return: нужные там параметры из запроса: токены, номер диалога, номер реплики
     """
     morph = pymorphy2.MorphAnalyzer()
+    tokens = [morph.parse(name)[0].normal_form for name in request['request']['nlu']['tokens']]
+    dialogue = request.get('state', {}).get('session', {}).get('dialogue', 0)
+    speech = request.get('state', {}).get('session', {}).get('speech', 0)
+    return tokens, dialogue, speech
+
+
+def create_request_json(request: dict, text: str, dialogue: int, speech: int) -> dict:
+    """
+    :param request: json запроса как он пришёл
+    :param text:  текст, который должен ответить ассистент
+    :param dialogue: номер диалога
+    :param speech: омер реплики
+    :return: json ответа
+    """
+    return {
+        'session': request['session'],
+        'version': request['version'],
+        'response': {
+            'end_session': False,
+            "text": text
+        },
+        "session_state": {
+            "dialogue": dialogue,
+            "speech": speech
+        }
+    }
+
+
+def validate_request_obj(request: dict) -> None:
+    """
+    Валидируем полученный json в объект
+    :param request: что мы получили по http
+    :return: сериализованный объект
+    """
     return Request(user_id=request['session']['user_id'],
                    session_id=request['session']['session_id'],
                    message_id=request['session']['message_id'],
                    version=request['version'],
                    text=request['request']['command'],
-                   tokens=[morph.parse(name)[0].normal_form for name in request['request']['nlu']['tokens']],
+                   tokens=request['request']['nlu']['tokens'],
                    dialogue=request.get('state', {}).get('session', {}).get('dialogue', 0),
-                   speech=request.get('state', {}).get('session', {}).get('speech', 0))
-
-
-def create_response_objs(body: dict) -> Response:
-    """
-    Создаёт объект ответа
-    :param body: что мы получили по http
-    :return: объект класса Response
-    """
-    return Response(user_id=body['session']['user']['user_id'] if body['session'].get('user') else body['session']['user_id'],
-                    session_id=body['session']['session_id'],
-                    message_id=body['session']['message_id'],
-                    skill_id=body['session']['skill_id'],
-                    application_id=body['session']['application']['application_id'] if body['session'].get('application') else "",
-                    version=body['version'])
+                   speech=request.get('state', {}).get('session', {}).get('speech', 0)).load()
 
 
 def command_matcher(verbal_tokens: List[str], pattern_phrases: List[str]) -> Tuple[bool, str]:

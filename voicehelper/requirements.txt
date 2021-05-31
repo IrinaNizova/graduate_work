@@ -10,3 +10,4 @@ pydantic==1.8.2
 gunicorn==20.1.0
 python-json-logger==2.0.1
 python-dotenv==0.17.1
+marshmallow==3.12.1
