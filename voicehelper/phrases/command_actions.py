@@ -33,7 +33,7 @@ def execute_command_with_name(verbal_tokens: str) -> dict:
     :param verbal_tokens: слова фразы которую произнёс пользователь
     :return: словарик с ключом text куда кладём текст, который отдадим голосовому ассистенту
     """
-    for pattern_object in CommandPhrases.objects.values_list('values', flat=True):
+    for pattern_object in CommandPhrases.objects.values():
         pattern_phrases = tuple(pattern_object['values'])
         is_match, additional_words = command_matcher(verbal_tokens, pattern_phrases)
         if is_match:

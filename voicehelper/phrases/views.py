@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from config.logger import LOGGER
 from phrases.command_actions import execute_command_with_name
-from phrases.consant_phrases import WRONG_REQUEST
+from phrases.constant_phrases import WRONG_REQUEST
 from phrases.talks import continue_dialogue, first_phrase
 from phrases.utils import get_talk_params_from_request, create_request_json, validate_request_obj
 

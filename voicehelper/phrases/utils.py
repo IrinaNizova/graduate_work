@@ -3,7 +3,7 @@ import pymorphy2
 from typing import List, Tuple
 
 from config.config import LEVENSHTEIN_DIVERCE
-from phrases.validators import Request, Response
+from phrases.validators import Request
 
 
 def get_talk_params_from_request(request: dict) -> tuple:
@@ -46,14 +46,16 @@ def validate_request_obj(request: dict) -> None:
     :param request: что мы получили по http
     :return: сериализованный объект
     """
-    return Request(user_id=request['session']['user_id'],
-                   session_id=request['session']['session_id'],
-                   message_id=request['session']['message_id'],
-                   version=request['version'],
-                   text=request['request']['command'],
-                   tokens=request['request']['nlu']['tokens'],
-                   dialogue=request.get('state', {}).get('session', {}).get('dialogue', 0),
-                   speech=request.get('state', {}).get('session', {}).get('speech', 0)).load()
+    return Request().load(dict(user_id=request['session']['user_id'],
+                               session_id=request['session']['session_id'],
+                               skill_id=request['session']['skill_id'],
+                               message_id=request['session']['message_id'],
+                               application_id=request['session']['application']['application_id'],
+                               version=request['version'],
+                               text=request['request']['command'],
+                               tokens=request['request']['nlu']['tokens'],
+                               dialogue=request.get('state', {}).get('session', {}).get('dialogue', 0) or 0,
+                               speech=request.get('state', {}).get('session', {}).get('speech', 0) or 0))
 
 
 def command_matcher(verbal_tokens: List[str], pattern_phrases: List[str]) -> Tuple[bool, str]:
